@@ -40,6 +40,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final _todoTitleController = TextEditingController();
+  final _todoContentController = TextEditingController();
+
   TodoBloc _todoBloc;
   TodoRepository get todoRepository => widget.todoRepository;
 
@@ -63,6 +66,30 @@ class _MyHomePageState extends State<MyHomePage> {
         return Center(child: Text('No Data'));
       } else {}
     }
+    if (state is TodoCallInputState) {
+      return Form(
+        child: Column(
+          children: <Widget>[
+            TextFormField(
+              decoration: InputDecoration(labelText: 'todo title'),
+              controller: _todoTitleController,
+            ),
+            TextFormField(
+              keyboardType: TextInputType.multiline,
+              maxLines: 5,
+              decoration: InputDecoration(labelText: 'todo content'),
+              controller: _todoContentController,
+            ),
+            RaisedButton(
+              child: Text('SAVE'),
+              onPressed: () {
+                _todoBloc.dispatch(TodoSaveButtonEvent(_todoTitleController.text, _todoContentController.text));
+              },
+            )
+          ],
+        ),
+      );
+    }
   }
 
   @override
@@ -78,7 +105,9 @@ class _MyHomePageState extends State<MyHomePage> {
           floatingActionButton: Row(mainAxisAlignment: MainAxisAlignment.end, children: <Widget>[
             FloatingActionButton(
               child: Icon(Icons.add),
-              onPressed: () {_todoBloc.dispatch(event)},
+              onPressed: () {
+                _todoBloc.dispatch(InputEvent());
+              },
             ),
           ]),
         );

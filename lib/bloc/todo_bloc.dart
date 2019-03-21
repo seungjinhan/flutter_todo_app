@@ -40,13 +40,16 @@ class TodoBloc extends Bloc<TodoEvent, TodoState> {
       // 글쓰기 이벤트 호출일때
     } else if (event is InputEvent) {
       try {
-        if (currentState is TodoCallInputState) {}
+        if (currentState is TodoLoadedState) {
+          yield TodoCallInputState(); // 입력 화면 호출
+        }
         if (currentState is TodoDoneInputState) {}
       } catch (_) {
         yield TodoError();
       }
+    } else if(event is TodoSaveButtonEvent){
+
+      await todoRepository.insert(model)
     }
   }
-
-  Future<List<TodoModel>> _fetchTodo() async {}
 }
