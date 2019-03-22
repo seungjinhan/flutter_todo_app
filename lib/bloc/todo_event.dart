@@ -22,9 +22,11 @@ class TodoSaveButtonEvent extends TodoEvent {
   final String content;
 
   TodoSaveButtonEvent(this.title, this.content);
+}
 
-  TodoModel get(){
+class TodoCheckEvent extends TodoEvent {
+  final bool isCheck;
+  final int id;
 
-    TodoModel( null, title, content, createDate, isDone, doneDate)    
-  }
+  TodoCheckEvent(this.id, this.isCheck);
 }

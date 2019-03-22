@@ -5,7 +5,7 @@ class TodoModel {
   String title;
   String content;
   String createDate;
-  bool isDone;
+  int isDone;
   String doneDate;
 
   TodoModel(this.id, this.title, this.content, this.createDate, this.isDone, this.doneDate);

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:my_todo_app/bloc/todo_bloc.dart';
 import 'package:my_todo_app/bloc/todo_event.dart';
 import 'package:my_todo_app/bloc/todo_state.dart';
+import 'package:my_todo_app/model/todo_model.dart';
 import 'package:my_todo_app/repository/todo_repository.dart';
 import 'package:my_todo_app/simple_bloc_delegate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -43,8 +44,25 @@ class _MyHomePageState extends State<MyHomePage> {
   final _todoTitleController = TextEditingController();
   final _todoContentController = TextEditingController();
 
+  final _scrollController = ScrollController();
+
+  final _scrollthreshold = 200.0;
+
   TodoBloc _todoBloc;
   TodoRepository get todoRepository => widget.todoRepository;
+
+  _MyHomePageState() {
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.position.pixels;
+
+    if (maxScroll - currentScroll <= _scrollthreshold) {
+      _todoBloc.dispatch(FetchEvent());
+    }
+  }
 
   @override
   void initState() {
@@ -53,7 +71,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
   }
 
-  Widget _body(TodoState state) {
+  Widget _body(BuildContext context, TodoState state) {
     if (state is TodoInitState) {
       return Center(
         child: CircularProgressIndicator(),
@@ -64,7 +82,18 @@ class _MyHomePageState extends State<MyHomePage> {
       if (state.todoModels.isEmpty) {
         // 데이터가 없을때 출력
         return Center(child: Text('No Data'));
-      } else {}
+      } else {
+        return ListView.builder(
+          itemBuilder: (BuildContext context, int index) {
+            return TodoWidget(
+              todoBloc: _todoBloc,
+              todo: state.todoModels[index],
+            );
+          },
+          controller: _scrollController,
+          itemCount: state.todoModels.length,
+        );
+      }
     }
     if (state is TodoCallInputState) {
       return Form(
@@ -90,6 +119,10 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       );
     }
+
+    if (state is TodoDoneInputState) {
+      _todoBloc.dispatch(FetchEvent());
+    }
   }
 
   @override
@@ -101,7 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
           appBar: AppBar(
             title: Text('To do'),
           ),
-          body: _body(state),
+          body: _body(context, state),
           floatingActionButton: Row(mainAxisAlignment: MainAxisAlignment.end, children: <Widget>[
             FloatingActionButton(
               child: Icon(Icons.add),
@@ -119,5 +152,27 @@ class _MyHomePageState extends State<MyHomePage> {
   void dispose() {
     _todoBloc.dispose();
     super.dispose();
+  }
+}
+
+class TodoWidget extends StatelessWidget {
+  final TodoModel todo;
+  final TodoBloc todoBloc;
+  const TodoWidget({Key key, this.todoBloc, this.todo}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Checkbox(
+        value: todo.isDone == 1 ? true : false,
+        onChanged: (bool isCheck) {
+          todoBloc.dispatch(TodoCheckEvent(todo.id, isCheck));
+        },
+      ),
+      title: Text(todo.title),
+      isThreeLine: true,
+      subtitle: Text(todo.content),
+      dense: true,
+    );
   }
 }

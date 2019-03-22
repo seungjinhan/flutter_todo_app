@@ -2,6 +2,7 @@ import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 import 'package:my_todo_app/model/todo_model.dart';
 import 'package:my_todo_app/repository/todo_repository.dart';
+import 'package:my_todo_app/utils/util.dart';
 import 'package:rxdart/rxdart.dart';
 import 'todo_event.dart';
 import 'todo_state.dart';
@@ -31,14 +32,19 @@ class TodoBloc extends Bloc<TodoEvent, TodoState> {
 
           yield TodoLoadedState(todoModels: result);
         }
-        if (currentState is TodoLoadingState) {}
         if (currentState is TodoLoadedState) {}
+        if (currentState is TodoDoneInputState) {
+          List<TodoModel> result = await todoRepository.getList();
+
+          yield TodoLoadedState(todoModels: result);
+        }
       } catch (_) {
         yield TodoError();
       }
+    }
 
-      // 글쓰기 이벤트 호출일때
-    } else if (event is InputEvent) {
+    // 글쓰기 이벤트 호출일때
+    else if (event is InputEvent) {
       try {
         if (currentState is TodoLoadedState) {
           yield TodoCallInputState(); // 입력 화면 호출
@@ -47,9 +53,17 @@ class TodoBloc extends Bloc<TodoEvent, TodoState> {
       } catch (_) {
         yield TodoError();
       }
-    } else if(event is TodoSaveButtonEvent){
-
-      await todoRepository.insert(model)
+    }
+    // 저장버튼 이벤트
+    else if (event is TodoSaveButtonEvent) {
+      TodoModel todo = new TodoModel(null, event.title, event.content, Util.today(), 0, '');
+      await todoRepository.insert(todo);
+      yield TodoDoneInputState();
+    } else if (event is TodoCheckEvent) {
+      final id = event.id;
+      final bool isCheck = event.isCheck;
+      await this.todoRepository.update(id, isCheck);
+      yield TodoDoneInputState();
     }
   }
 }
