@@ -59,10 +59,18 @@ class TodoBloc extends Bloc<TodoEvent, TodoState> {
       TodoModel todo = new TodoModel(null, event.title, event.content, Util.today(), 0, '');
       await todoRepository.insert(todo);
       yield TodoDoneInputState();
-    } else if (event is TodoCheckEvent) {
+    }
+    // 체크 이벤트
+    else if (event is TodoCheckEvent) {
       final id = event.id;
       final bool isCheck = event.isCheck;
       await this.todoRepository.update(id, isCheck);
+      yield TodoDoneInputState();
+    }
+    // 삭제 이벤트
+    else if (event is TodoDeleteEvent) {
+      final id = event.id;
+      await this.todoRepository.delete(id);
       yield TodoDoneInputState();
     }
   }

@@ -8,6 +8,8 @@ import 'package:my_todo_app/repository/todo_repository.dart';
 import 'package:my_todo_app/simple_bloc_delegate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:meta/meta.dart';
+import 'package:my_todo_app/utils/input_controller.dart';
+import 'package:my_todo_app/utils/provider.dart';
 
 void main() {
   BlocSupervisor().delegate = SimpleBlocDelegate();
@@ -41,9 +43,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final _todoTitleController = TextEditingController();
-  final _todoContentController = TextEditingController();
-
+  final formKey = GlobalKey<FormState>();
   final _scrollController = ScrollController();
 
   final _scrollthreshold = 200.0;
@@ -72,6 +72,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _body(BuildContext context, TodoState state) {
+    final inputCtrl = Provider.of(context);
+
     if (state is TodoInitState) {
       return Center(
         child: CircularProgressIndicator(),
@@ -96,26 +98,47 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     }
     if (state is TodoCallInputState) {
-      return Form(
-        child: Column(
-          children: <Widget>[
-            TextFormField(
-              decoration: InputDecoration(labelText: 'todo title'),
-              controller: _todoTitleController,
-            ),
-            TextFormField(
-              keyboardType: TextInputType.multiline,
-              maxLines: 5,
-              decoration: InputDecoration(labelText: 'todo content'),
-              controller: _todoContentController,
-            ),
-            RaisedButton(
-              child: Text('SAVE'),
-              onPressed: () {
-                _todoBloc.dispatch(TodoSaveButtonEvent(_todoTitleController.text, _todoContentController.text));
-              },
-            )
-          ],
+      final _todoTitleController = TextEditingController();
+      final _todoContentController = TextEditingController();
+
+      return Container(
+        margin: EdgeInsets.all(20.0),
+        child: Form(
+          key: formKey,
+          child: Column(
+            children: <Widget>[
+              titleField(inputCtrl),
+              Container(margin: EdgeInsets.only(bottom: 25.0)),
+              contentField(inputCtrl),
+              Container(margin: EdgeInsets.only(bottom: 25.0)),
+              RaisedButton(
+                color: Colors.pink,
+                child: Text('Save'),
+                onPressed: () {
+                  if (formKey.currentState.validate()) {
+                    //formKey.currentState.save();
+                    _todoBloc.dispatch(TodoSaveButtonEvent(_todoTitleController.text, _todoContentController.text));
+                  }
+                },
+              ),
+              // TextFormField(
+              //   decoration: InputDecoration(labelText: 'todo title'),
+              //   controller: _todoTitleController,
+              // ),
+              // TextFormField(
+              //   keyboardType: TextInputType.multiline,
+              //   maxLines: 5,
+              //   decoration: InputDecoration(labelText: 'todo content'),
+              //   controller: _todoContentController,
+              // ),
+              // RaisedButton(
+              //   child: Text('SAVE'),
+              //   onPressed: () {
+              //     _todoBloc.dispatch(TodoSaveButtonEvent(_todoTitleController.text, _todoContentController.text));
+              //   },
+              // )
+            ],
+          ),
         ),
       );
     }
@@ -123,6 +146,30 @@ class _MyHomePageState extends State<MyHomePage> {
     if (state is TodoDoneInputState) {
       _todoBloc.dispatch(FetchEvent());
     }
+  }
+
+  Widget titleField(InputController inputCtrl) {
+    return StreamBuilder(
+      stream: inputCtrl.title,
+      builder: (context, snapshot) {
+        return TextField(
+          onChanged: inputCtrl.changeTitle,
+          decoration: InputDecoration(labelText: 'Title', hintText: 'this is title', errorText: snapshot.error),
+        );
+      },
+    );
+  }
+
+  Widget contentField(InputController inputCtrl) {
+    return StreamBuilder(
+      stream: inputCtrl.content,
+      builder: (context, snapshot) {
+        return TextField(
+          onChanged: inputCtrl.changeContent,
+          decoration: InputDecoration(labelText: 'Content', hintText: 'this is content', errorText: snapshot.error),
+        );
+      },
+    );
   }
 
   @override
@@ -162,17 +209,29 @@ class TodoWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Checkbox(
-        value: todo.isDone == 1 ? true : false,
-        onChanged: (bool isCheck) {
-          todoBloc.dispatch(TodoCheckEvent(todo.id, isCheck));
-        },
+    return Dismissible(
+      key: Key("${todo.id}"),
+      onDismissed: (dir) {
+        todoBloc.dispatch(TodoDeleteEvent(todo.id));
+        Scaffold.of(context).showSnackBar(SnackBar(
+          content: Text("${todo.title} remove"),
+        ));
+      },
+      background: Container(
+        color: Colors.orangeAccent,
       ),
-      title: Text(todo.title),
-      isThreeLine: true,
-      subtitle: Text(todo.content),
-      dense: true,
+      child: ListTile(
+        leading: Checkbox(
+          value: todo.isDone == 1 ? true : false,
+          onChanged: (bool isCheck) {
+            todoBloc.dispatch(TodoCheckEvent(todo.id, isCheck));
+          },
+        ),
+        title: Text(todo.title),
+        isThreeLine: true,
+        subtitle: Text(todo.content),
+        dense: true,
+      ),
     );
   }
 }

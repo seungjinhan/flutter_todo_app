@@ -30,3 +30,9 @@ class TodoCheckEvent extends TodoEvent {
 
   TodoCheckEvent(this.id, this.isCheck);
 }
+
+class TodoDeleteEvent extends TodoEvent {
+  final int id;
+
+  TodoDeleteEvent(this.id);
+}
