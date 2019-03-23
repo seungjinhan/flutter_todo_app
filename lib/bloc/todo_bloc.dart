@@ -31,11 +31,13 @@ class TodoBloc extends Bloc<TodoEvent, TodoState> {
           List<TodoModel> result = await todoRepository.getList();
 
           yield TodoLoadedState(todoModels: result);
-        }
-        if (currentState is TodoLoadedState) {}
-        if (currentState is TodoDoneInputState) {
+        } else if (currentState is TodoLoadedState) {
+        } else if (currentState is TodoDoneInputState) {
           List<TodoModel> result = await todoRepository.getList();
 
+          yield TodoLoadedState(todoModels: result);
+        } else {
+          List<TodoModel> result = await todoRepository.getList();
           yield TodoLoadedState(todoModels: result);
         }
       } catch (_) {

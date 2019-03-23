@@ -25,11 +25,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-        title: 'Todo Demo',
-        home: MyHomePage(
-          todoRepository: todoRepository,
-        ));
+    return Provider(
+      child: MaterialApp(
+          title: 'Todo Demo',
+          home: MyHomePage(
+            todoRepository: todoRepository,
+          )),
+    );
   }
 }
 
@@ -111,16 +113,8 @@ class _MyHomePageState extends State<MyHomePage> {
               Container(margin: EdgeInsets.only(bottom: 25.0)),
               contentField(inputCtrl),
               Container(margin: EdgeInsets.only(bottom: 25.0)),
-              RaisedButton(
-                color: Colors.pink,
-                child: Text('Save'),
-                onPressed: () {
-                  if (formKey.currentState.validate()) {
-                    //formKey.currentState.save();
-                    _todoBloc.dispatch(TodoSaveButtonEvent(_todoTitleController.text, _todoContentController.text));
-                  }
-                },
-              ),
+              saveButton(inputCtrl),
+
               // TextFormField(
               //   decoration: InputDecoration(labelText: 'todo title'),
               //   controller: _todoTitleController,
@@ -167,6 +161,25 @@ class _MyHomePageState extends State<MyHomePage> {
         return TextField(
           onChanged: inputCtrl.changeContent,
           decoration: InputDecoration(labelText: 'Content', hintText: 'this is content', errorText: snapshot.error),
+          keyboardType: TextInputType.multiline,
+          maxLines: 5,
+        );
+      },
+    );
+  }
+
+  Widget saveButton(InputController inputCtrl) {
+    return StreamBuilder(
+      stream: inputCtrl.saveBtnValid,
+      builder: (context, snapshot) {
+        return RaisedButton(
+          child: Text('save'),
+          color: Colors.red,
+          onPressed: snapshot.hasData
+              ? () {
+                  inputCtrl.save(_todoBloc);
+                }
+              : null,
         );
       },
     );
@@ -180,6 +193,18 @@ class _MyHomePageState extends State<MyHomePage> {
         return Scaffold(
           appBar: AppBar(
             title: Text('To do'),
+            leading: (state is TodoCallInputState)
+                ? Builder(
+                    builder: (context) {
+                      return IconButton(
+                        icon: const Icon(Icons.arrow_back),
+                        onPressed: () {
+                          _todoBloc.dispatch(FetchEvent());
+                        },
+                      );
+                    },
+                  )
+                : null,
           ),
           body: _body(context, state),
           floatingActionButton: Row(mainAxisAlignment: MainAxisAlignment.end, children: <Widget>[
