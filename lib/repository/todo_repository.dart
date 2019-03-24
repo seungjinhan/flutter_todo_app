@@ -1,5 +1,5 @@
 import 'package:my_todo_app/model/todo_model.dart';
-import 'package:my_todo_app/utils/util.dart';
+import 'package:my_todo_app/utils/date_util.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -54,8 +54,8 @@ class TodoRepository {
     var dbClient = await db;
 
     await dbClient.transaction((tx) async {
-      int result = await tx.rawInsert(
-          'INSERT INTO ${tableName} (id , title, content, is_done, done_date) VALUES ( ? ,? , ? , ?,?)', [Util.today(), "${model.title}", "${model.content}", model.isDone, "${model.doneDate}"]);
+      int result = await tx.rawInsert('INSERT INTO ${tableName} (id , title, content, is_done, done_date) VALUES ( ? ,? , ? , ?,?)',
+          [DateUtil.now(EnumDate.YYYYMMDDhhmmss), "${model.title}", "${model.content}", model.isDone, "${model.doneDate}"]);
 
       return result;
     });
@@ -78,7 +78,7 @@ class TodoRepository {
     var dbClient = await db;
 
     await dbClient.transaction((tx) async {
-      return await tx.rawUpdate("UPDATE ${tableName} SET is_done = ?, done_date = ? WHERE id = ?", [isCheck == true ? 1 : 0, isCheck == true ? Util.today() : '', id]);
+      return await tx.rawUpdate("UPDATE ${tableName} SET is_done = ?, done_date = ? WHERE id = ?", [isCheck == true ? 1 : 0, isCheck == true ? DateUtil.now(EnumDate.YYYYMMDDhhmmss) : '', id]);
     });
 
     return 0;

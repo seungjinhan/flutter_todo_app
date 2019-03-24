@@ -5,7 +5,7 @@ import 'package:my_todo_app/bloc/todo_event.dart';
 import 'validator.dart';
 import 'package:rxdart/rxdart.dart';
 
-class InputController with Validator {
+class TodoRxDart with Validator {
   final _titleController = BehaviorSubject<String>();
   final _contentController = BehaviorSubject<String>();
 
