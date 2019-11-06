@@ -15,4 +15,4 @@ Todo App
 3. sqflite
 
 ### movie
-http://blog.naver.com/deepplin/221495650269
+https://fenderist.tistory.com/250
